@@ -52,19 +52,19 @@ function App() {
 
     // Upload image to IPFS (NFT.Storage)
     const url = await uploadImage(imageData)
-
+    setIsWaiting(false);
     // Mint NFT
-    await mintImage(url)
+    await mintImage(url);
 
-    setIsWaiting(false)
-    setMessage("")
+    
+    setMessage("");
   }
 
   const createImage = async () => {
     setMessage("Generating Image...")
 
     // You can replace this with different model API's
-    const URL = `https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2`
+    const URL = `https://api-inference.huggingface.co/models/dreamlike-art/dreamlike-photoreal-2.0`
 
     // Send the request
     const response = await axios({
@@ -80,10 +80,8 @@ function App() {
       }),
       responseType: 'arraybuffer',
     })
-
     const type = response.headers['content-type']
     const data = response.data
-
     const base64data = Buffer.from(data).toString('base64')
     const img = `data:${type};base64,` + base64data // <-- This is so we can render it on the page
     setImage(img)
@@ -93,7 +91,6 @@ function App() {
 
   const uploadImage = async (imageData) => {
     setMessage("Uploading Image...")
-
     // Create instance to NFT.Storage
     const nftstorage = new NFTStorage({ token: process.env.REACT_APP_NFT_STORAGE_API_KEY })
 
@@ -103,6 +100,7 @@ function App() {
       name: name,
       description: description,
     })
+    
 
     // Save the URL
     const url = `https://ipfs.io/ipfs/${ipnft}/metadata.json`
@@ -115,13 +113,18 @@ function App() {
     setMessage("Waiting for Mint...")
 
     const signer = await provider.getSigner()
-    const transaction = await nft.connect(signer).mint(tokenURI, { value: ethers.utils.parseUnits("1", "ether") })
+    const transaction = await nft.connect(signer).mint(tokenURI, { value: ethers.utils.parseUnits("0", "ether") })
     await transaction.wait()
+    console.log("minted")
   }
 
   useEffect(() => {
     loadBlockchainData()
   }, [])
+
+  useEffect(()=>{
+    setIsWaiting(false)
+  },[image])
 
   return (
     <div>
